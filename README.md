@@ -1,0 +1,2 @@
+Sistema de Resguardo Documental Digital 📂
+Este proyecto es una plataforma de gestión y consulta de documentación física digitalizada (facturas y recibos). Está diseñado bajo una arquitectura Serverless en AWS para garantizar escalabilidad, seguridad y bajos costos operativos.
