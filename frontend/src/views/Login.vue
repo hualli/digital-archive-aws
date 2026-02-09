@@ -50,24 +50,45 @@
   </template>
   
   <script setup>
-  import { reactive } from 'vue'
-  import { useRouter } from 'vue-router'
-  
-  const router = useRouter()
-  const form = reactive({
-    username: '',
-    password: ''
-  })
-  
-  const handleLogin = () => {
-    // Lógica temporal para la demo basada en los usuarios que creamos en AWS RDS
-    // Cuando tengas el backend, aquí harás el POST a la API
-    if (form.username === 'superadmin') {
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/services/api' // Importamos tu nuevo servicio
+
+const router = useRouter()
+const form = reactive({
+  username: '',
+  password: ''
+})
+
+const handleLogin = async () => {
+  try {
+    // 1. Llamada real a tu API Gateway en Ohio
+    const response = await api.login(form.username, form.password)
+    
+    // 2. Extraemos los datos que programamos en la Lambda
+    const { id, role } = response.data
+
+    // 3. Guardamos en localStorage para auditoría y persistencia
+    // Esto es vital para que las otras Lambdas sepan quién está operando
+    localStorage.setItem('user_id', id)
+    localStorage.setItem('user_role', role)
+    localStorage.setItem('username', form.username)
+
+    // 4. Redirección dinámica basada en el rol de la base de datos
+    if (role === 'superadmin') {
       router.push('/stats')
-    } else if (form.username === 'user_a' || form.username === 'user_b') {
-      router.push('/search')
     } else {
-      alert('Usuario no reconocido para la demo. Intentá con superadmin, user_a o user_b.')
+      router.push('/search')
+    }
+    
+  } catch (error) {
+    // Manejo de errores (por ejemplo, el 401 que vimos antes)
+    console.error("Error en login:", error)
+    if (error.response && error.response.status === 401) {
+      alert('Credenciales incorrectas. Por favor, verificá tu usuario y contraseña.')
+    } else {
+      alert('Hubo un problema al conectar con el servidor. Reintentá en unos minutos.')
     }
   }
-  </script>
+}
+</script>
